@@ -8,7 +8,7 @@ import * as path from "path";
 import { GenerateOptions, ValidatorOutput } from "../GenerateOptions";
 import { createDecoderName, createValidatorName } from "./generation-utils";
 
-export function generateStandaloneDecoders(
+export async function generateStandaloneDecoders(
   definitionNames: string[],
   schema: ParsedSchema,
   addFormats: boolean,
@@ -17,14 +17,14 @@ export function generateStandaloneDecoders(
   esm: boolean,
   outDirs: string[],
   prettierOptions: Options
-): void {
+): Promise<void> {
   const indexExports: string[] = [];
 
-  definitionNames.forEach((definitionName) => {
+  definitionNames.forEach(async (definitionName) => {
     const validatorName = createValidatorName(definitionName);
     const decoderName = createDecoderName(definitionName);
 
-    const validatorsOutput = standAloneValidatorOutput(
+    const validatorsOutput = await standAloneValidatorOutput(
       schema,
       [definitionName],
       addFormats,
@@ -41,9 +41,9 @@ export function generateStandaloneDecoders(
       .replace(/\$ValidatorImports/g, validatorImportStatement)
       .replace(/\$ValidatorName/g, validatorName);
 
-    const decoderOutput = format(rawDecoderOutput, prettierOptions);
+    const decoderOutput = await format(rawDecoderOutput, prettierOptions);
 
-    const validatorDefinitions = validatorDefinitionsOutput(
+    const validatorDefinitions = await validatorDefinitionsOutput(
       [definitionName],
       prettierOptions
     );
@@ -73,7 +73,7 @@ export function generateStandaloneDecoders(
     indexExports.join("\n")
   );
 
-  const indexOutput = format(indexOutputRaw, prettierOptions);
+  const indexOutput = await format(indexOutputRaw, prettierOptions);
 
   outDirs.forEach((outDir) => {
     const decoderDir = path.join(outDir, "decoders");
@@ -83,7 +83,7 @@ export function generateStandaloneDecoders(
   });
 }
 
-export function generateStandaloneMergedDecoders(
+export async function generateStandaloneMergedDecoders(
   definitionNames: string[],
   schema: ParsedSchema,
   addFormats: boolean,
@@ -114,11 +114,11 @@ export function generateStandaloneMergedDecoders(
     .replace(/\$ModelImports/g, definitionNames.join(", "))
     .replace(/\$Decoders/g, decoders);
 
-  const decoderOutput = format(rawDecoderOutput, prettierOptions);
+  const decoderOutput = await format(rawDecoderOutput, prettierOptions);
 
   const rawValidatorsOutput = validatorsFileTemplate.replace(
     /\$Validators/g,
-    standAloneValidatorOutput(
+    await standAloneValidatorOutput(
       schema,
       definitionNames,
       addFormats,
@@ -128,8 +128,8 @@ export function generateStandaloneMergedDecoders(
     )
   );
 
-  const validatorsOutput = format(rawValidatorsOutput, prettierOptions);
-  const validatorDefinitions = validatorDefinitionsOutput(
+  const validatorsOutput = await format(rawValidatorsOutput, prettierOptions);
+  const validatorDefinitions = await validatorDefinitionsOutput(
     definitionNames,
     prettierOptions
   );
@@ -162,14 +162,14 @@ function createValidatorImportStatement(validatorImportString: string, output: V
 }
 
 
-function standAloneValidatorOutput(
+async function standAloneValidatorOutput(
   schema: ParsedSchema,
   definitions: string[],
   formats: boolean,
   formatOptions: FormatsPluginOptions | undefined,
   output: ValidatorOutput,
   prettierOptions: Options
-): string {
+): Promise<string> {
   const ajv = new Ajv({ code: { source: true }, strict: false });
   if (formats) {
     addFormats(ajv, formatOptions);
@@ -200,7 +200,7 @@ function standAloneValidatorOutput(
     jsOutput
   );
 
-  const validatorsOutput = format(rawValidatorsOutput, prettierOptions);
+  const validatorsOutput = await format(rawValidatorsOutput, prettierOptions);
   return validatorsOutput;
 }
 

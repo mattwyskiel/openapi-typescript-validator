@@ -20,7 +20,7 @@ export async function generateModels(
     .replace(/\s*\[k: string\]: unknown;/g, "") // Allow additional properties in schema but not in typescript
     .replace(/export interface Schema \{[^]*?\n\}/, "");
 
-  const typescriptModels = format(rawTypescriptModels, prettierOptions);
+  const typescriptModels = await format(rawTypescriptModels, prettierOptions);
 
   outDirs.forEach((outDir) => {
     mkdirSync(outDir, { recursive: true });

@@ -24,7 +24,7 @@ export async function generate(options: GenerateOptions) {
     `Start generating files for ${schemaType} schema: ${schemaFile}`
   );
 
-  const schema = await parseSchema(schemaFile, schemaType);
+  const schema = parseSchema(schemaFile, schemaType);
 
   const allDefinitions = Object.keys(schema.definitions);
 
@@ -39,10 +39,10 @@ export async function generate(options: GenerateOptions) {
   });
 
   if (options.skipDecoders !== true && definitionNames.length > 0) {
-    generateAjvValidator(prettierOptions, directories);
+    await generateAjvValidator(prettierOptions, directories);
 
     if (!options.standalone) {
-      generateCompileBasedDecoders(
+      await generateCompileBasedDecoders(
         definitionNames,
         options.addFormats ?? false,
         options.formatOptions,
@@ -50,7 +50,7 @@ export async function generate(options: GenerateOptions) {
         prettierOptions
       );
     } else if (options.standalone.mergeDecoders === true) {
-      generateStandaloneMergedDecoders(
+      await generateStandaloneMergedDecoders(
         definitionNames,
         schema,
         options.addFormats ?? false,
@@ -61,7 +61,7 @@ export async function generate(options: GenerateOptions) {
         prettierOptions
       );
     } else {
-      generateStandaloneDecoders(
+      await generateStandaloneDecoders(
         definitionNames,
         schema,
         options.addFormats ?? false,
@@ -80,10 +80,10 @@ export async function generate(options: GenerateOptions) {
     prettierOptions,
     directories
   );
-  generateHelpers(prettierOptions, directories);
+  await generateHelpers(prettierOptions, directories);
 
   if (options.skipMetaFile !== true) {
-    generateMetaFile(allDefinitions, directories, prettierOptions, options.esm ?? false);
+    await generateMetaFile(allDefinitions, directories, prettierOptions, options.esm ?? false);
   }
 
   console.info(`Successfully generated files for ${schemaFile}`);
